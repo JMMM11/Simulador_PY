@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simulador de Python — 35 preguntas</title>
+<style>
+:root { color-scheme: light; font-family: Arial, Helvetica, sans-serif; color: #20352a; background: #f3f6f3; }
+* { box-sizing: border-box; }
+body { margin: 0; padding: 24px 16px; }
+main { max-width: 850px; margin: auto; }
+h1 { font-size: 26px; margin: 0 0 8px; }
+.intro { color: #526358; margin: 0 0 24px; }
+#python-quiz { background: white; padding: 28px; border-radius: 16px; box-shadow: 0 4px 24px #17332512; }
+h2 { font-size: 22px; }
+p { line-height: 1.6; }
+pre { padding: 18px; background: #20252a; color: #f5f7fa; border-radius: 8px; line-height: 1.6; font-size: 15px; }
+code { font-family: Consolas, monospace; }
+.form-check { display: flex; align-items: flex-start; gap: 12px; border: 1px solid #cbd6ce; border-radius: 8px; padding: 16px; cursor: pointer; line-height: 1.5; overflow-wrap: anywhere; }
+.form-check:has(input:checked) { background: #e7f3e5; border-color: #679e5a; }
+.form-check:has(input:focus-visible) { outline: 3px solid #c68c49; outline-offset: 2px; }
+.form-check-input { flex: 0 0 auto; margin-top: 4px; width: 18px; height: 18px; accent-color: #43763c; }
+.viz-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+#pq-count { color: #526358; }
+.btn { font: inherit; padding: 12px 20px; border: 1px solid #43763c; border-radius: 8px; color: #173325; background: white; cursor: pointer; min-height: 44px; }
+.btn-primary { background: #43763c; color: white; }
+.btn:hover { filter: brightness(.95); }
+.btn:focus-visible { outline: 3px solid #c68c49; outline-offset: 3px; }
+[hidden] { display: none !important; }
+#pq-feedback:not(:empty) { padding: 16px; background: #eff5ee; border-left: 4px solid #679e5a; border-radius: 4px; }
+@media (max-width: 480px) { #python-quiz { padding: 18px; } body { padding: 16px 10px; } }
+</style>
+</head>
+<body>
+<main>
+<h1>Simulador de Python</h1>
+<p class="intro">35 preguntas · Selecciona tu respuesta y pulsa Comprobar.</p>
+<div id="python-quiz">
+  <div class="viz-row"><span id="pq-count" class="tabular-nums"></span></div>
+  <h2 id="pq-title"></h2>
+  <p id="pq-question"></p>
+  <pre id="pq-code" style="white-space:pre-wrap;overflow-wrap:anywhere"><code></code></pre>
+  <form id="pq-form"><div id="pq-options" style="display:grid;gap:12px"></div><div class="viz-row" style="margin-top:20px"><button type="submit" class="btn btn-primary" id="pq-check">Comprobar</button><button type="button" class="btn" id="pq-next" hidden>Siguiente pregunta</button></div></form>
+  <p id="pq-feedback" aria-live="polite"></p>
+</div>
+<script>
+(() => {
+const root=document.getElementById('python-quiz');
+const el=id=>root.querySelector('#pq-'+id);
+const standard='¿Cuál es el resultado del siguiente fragmento de código?';
+const questions=[
+{q:standard,c:`my_list = [1, 2]
+
+for v in range(2):
+    my_list.insert(-1, my_list[v])
+
+print(my_list)`,o:['[1, 2, 2, 2]','[2, 1, 1, 2]','[1, 2, 1, 2]','[1, 1, 1, 2]'],a:[3],e:'insert(-1, ...) inserta antes del último elemento. Primero la lista queda [1, 1, 2]; después my_list[1] vale 1 y queda [1, 1, 1, 2].'},
+{q:'El significado de un argumento posicional está determinado por:',o:['su posición dentro de la lista de argumentos','su valor','su conexión con variables existentes','el nombre del argumento especificado junto con su valor'],a:[0],e:'Los argumentos posicionales se asignan a los parámetros según el orden en el que se pasan a la función.'},
+{q:'¿Cuáles de los siguientes enunciados son verdaderos respecto al código? (Selecciona dos respuestas)',c:`nums = [1, 2, 3]
+vals = nums`,o:['nums y vals son diferentes nombres de la misma lista','nums tiene la misma longitud que vals','vals es más larga que nums','nums y vals son listas diferentes'],a:[0,1],e:'vals = nums no copia la lista: ambos nombres apuntan al mismo objeto y, por tanto, tienen la misma longitud.'},
+{q:'Un operador capaz de verificar si dos valores no son iguales se codifica como:',o:['<>','!=','not ==','=/='],a:[1],e:'En Python, != compara dos valores y devuelve True cuando son diferentes.'},
+{q:'El siguiente fragmento de código:',c:`def function_1(a):
+    return None
+
+
+def function_2(a):
+    return function_1(a) * function_1(a)
+
+
+print(function_2(2))`,o:['dará como salida 16','provocará un error de ejecución','dará como salida 4','dará como salida 2'],a:[1],e:'function_1 devuelve None. Multiplicar None por None provoca TypeError, así que no se imprime un resultado numérico.'},
+{q:'El resultado de la siguiente división:',c:'1 // 2',o:['es igual a 0.0','no se puede predecir','es igual a 0','es igual a 0.5'],a:[2],e:'// es división de piso. Con dos enteros, 1 // 2 devuelve el entero 0.'},
+{q:'El siguiente fragmento de código:',c:`def func(a, b):
+    return b ** a
+
+
+print(func(b=2, 2))`,o:['dará como salida 2','dará como salida 4','es erróneo','dará como salida None'],a:[2],e:'En esta llamada, un argumento posicional aparece después de un argumento con nombre. Esa sintaxis provoca SyntaxError.'},
+{q:'¿Qué valor se asignará a la variable x?',c:`z = 0
+y = 10
+x = y < z and z > y or y < z and z < y`,o:['1','True','0','False'],a:[3],e:'y < z es 10 < 0, que es False. Ambos grupos unidos por and son False; False or False devuelve el booleano False, no el entero 0.'},
+{q:'¿Cuáles de los siguientes nombres de variable son ilegales y provocarán una excepción de SyntaxError? (Selecciona dos respuestas)',o:['In','for','print','in'],a:[1,3],e:'for e in son palabras reservadas. In es válido porque Python distingue mayúsculas; print también puede ser un nombre de variable, aunque ocultaría la función incorporada.'},
+{q:standard,c:`my_list = [x * x for x in range(5)]
+
+
+def fun(lst):
+    del lst[lst[2]]
+    return lst
+
+
+print(fun(my_list))`,o:['[0, 1, 4, 9]','[0, 1, 9, 16]','[1, 4, 9, 16]','[0, 1, 4, 16]'],a:[0],e:'La lista inicial es [0, 1, 4, 9, 16]. lst[2] vale 4, así que del lst[lst[2]] elimina el elemento de índice 4, que es 16.'},
+{q:standard,c:`x = 1
+y = 2
+x, y, z = x, x, y
+z, y, z = x, y, z
+
+print(x, y, z)`,o:['1 2 1','1 1 2','1 2 2','2 1 2'],a:[1],e:'La primera asignación deja x=1, y=1, z=2. En la segunda, el lado derecho se evalúa antes de asignar: z recibe primero 1 y luego 2. El resultado es 1 1 2.'},
+{q:standard,c:`a = 1
+b = 0
+a = a ^ b
+b = a ^ b
+a = a ^ b
+
+print(a, b)`,o:['0 0','0 1','1 0','1 1'],a:[1],e:'^ es XOR bit a bit. Las asignaciones producen a=1, después b=1 y finalmente a=0. Se imprime 0 1.'},
+{q:standard,c:`def fun(x):
+    if x % 2 == 0:
+        return 1
+    else:
+        return 2
+
+
+print(fun(fun(2)))`,o:['None','1','el código provocará un error de ejecución','2'],a:[3],e:'fun(2) devuelve 1 porque 2 es par. Luego fun(1) devuelve 2 porque 1 es impar.'},
+{q:'Observa el fragmento de código y elige la sentencia verdadera:',c:`nums = [1, 2, 3]
+vals = nums
+del vals[:]`,o:['el código provocará un error de ejecución','nums y vals tienen la misma longitud','vals es más larga que nums','nums es más larga que vals'],a:[1],e:'Ambos nombres apuntan a la misma lista. del vals[:] elimina todos sus elementos, así que las dos longitudes son 0.'},
+{q:'¿Cuál es el resultado del siguiente fragmento de código si el usuario ingresa dos líneas que contienen 3 y 2 respectivamente?',c:`x = int(input())
+y = int(input())
+x = x % y
+x = x % y
+y = y % x
+print(y)`,o:['1','2','3','0'],a:[3],e:'3 % 2 da 1; después 1 % 2 sigue siendo 1. Finalmente 2 % 1 da 0, que es el valor impreso.'},
+{q:'¿Cuál es el resultado del siguiente fragmento de código si el usuario ingresa dos líneas que contienen 3 y 6 respectivamente?',c:`y = input()
+x = input()
+print(x + y)`,o:['36','6','3','63'],a:[3],e:'input devuelve cadenas. y recibe "3" y x recibe "6"; x + y concatena las cadenas en el orden "6" + "3", dando 63.'},
+{q:standard,c:`print("a", "b", "c", sep="sep")`,o:['asepbsepcsep','a b c','abc','asepbsepc'],a:[3],e:'sep="sep" coloca sep entre los argumentos, sin añadirlo al final: a + sep + b + sep + c produce asepbsepc.'},
+{q:standard,c:`x = 1 // 5 + 1 / 5
+print(x)`,o:['0','0.5','0.4','0.2'],a:[3],e:'1 // 5 es 0 y 1 / 5 es 0.2. La suma es el número flotante 0.2.'},
+{q:'Suponiendo que my_tuple es una tupla creada correctamente, el hecho de que las tuplas sean inmutables significa que la siguiente instrucción:',c:'my_tuple[1] = my_tuple[1] + my_tuple[0]',o:['puede ser ilegal si la tupla contiene cadenas','es ilegal','es completamente correcta','se puede ejecutar si y solo si la tupla contiene al menos dos elementos'],a:[1],e:'Una tupla no permite reasignar sus elementos mediante índices. Aunque la suma pueda calcularse, la asignación a my_tuple[1] no está permitida.'},
+{q:'¿Cuál es el resultado del siguiente fragmento de código si el usuario ingresa dos líneas que contienen 2 y 4 respectivamente?',c:`x = float(input())
+y = float(input())
+print(y ** (1 / x))`,o:['1.0','0.0','2.0','4.2'],a:[2],e:'x=2.0 e y=4.0. El exponente es 1 / 2.0 = 0.5; 4.0 elevado a 0.5 da 2.0.'},
+{q:standard,c:`dct = {'one': 'two', 'three': 'one', 'two': 'three'}
+v = dct['three']
+
+for k in range(len(dct)):
+    v = dct[v]
+
+print(v)`,o:["('one', 'two', 'three')",'two','one','three'],a:[2],e:'v empieza en one. El bucle recorre tres pasos: one → two → three → one. Se imprime one.'},
+{q:'¿Cuántos elementos contiene la lista lst?',c:'lst = [i for i in range(-1, -2)]',o:['uno','cero','dos','tres'],a:[1],e:'range usa un paso positivo de 1 por defecto. Como -1 ya es mayor que el límite -2, no genera valores y la lista queda vacía.'},
+{q:'¿Cuáles de las siguientes líneas correctamente invocan la función definida a continuación? (Selecciona dos respuestas)',c:`def fun(a, b, c=0):
+    # Cuerpo de la función.`,o:['fun(0, 1, 2)','fun(b=0, a=0)','fun(b=1)','fun()'],a:[0,1],e:'a y b son obligatorios; c tiene un valor predeterminado. Las dos primeras llamadas proporcionan a y b. Las otras omiten al menos uno de esos parámetros.'},
+{q:standard,c:`def fun(x, y):
+    if x == y:
+        return x
+    else:
+        return fun(x, y-1)
+
+
+print(fun(0, 3))`,o:['1','el código provocará un error de ejecución','2','0'],a:[3],e:'Las llamadas son fun(0,3), fun(0,2), fun(0,1) y fun(0,0). Al igualarse x e y, la función devuelve x, que es 0.'},
+{q:'¿Cuántos (*) imprimirá el siguiente fragmento de código en la consola?',c:`i = 0
+while i < i + 2 :
+    i += 1
+    print("*")
+else:
+    print("*")`,o:['1','2','el fragmento entrará en un bucle infinito, imprimiendo un * por línea','0'],a:[2],e:'Para cualquier entero i, i < i + 2 siempre es verdadero. El bucle continúa indefinidamente, imprime un asterisco por iteración y no llega al else.'},
+{q:standard,c:`tup = (1, 2, 4, 8)
+tup = tup[-2:-1]
+tup = tup[-1]
+print(tup)`,o:['4','(4,)','44','(4)'],a:[0],e:'El corte [-2:-1] produce la tupla (4,). Después [-1] extrae el entero 4. print imprime 4, sin paréntesis.'},
+{q:standard,c:`dd = {"1": "0", "0": "1"}
+for x in dd.vals():
+    print(x, end="")`,o:['1 0','0 0','el código es erróneo (el objeto dict no contiene el método vals())','0 1'],a:[2],e:'Los diccionarios tienen el método values(), pero no vals(). La llamada dd.vals() provoca AttributeError antes de ejecutar el bucle.'},
+{q:standard,c:`dct = {}
+dct['1'] = (1, 2)
+dct['2'] = (2, 1)
+
+for x in dct.keys():
+    print(dct[x][1], end="")`,o:['21','(2,1)','(1,2)','12'],a:[0],e:'Las claves se recorren en su orden de inserción. El elemento de índice 1 de (1, 2) es 2 y el de (2, 1) es 1. end="" los imprime juntos: 21.'},
+{q:standard,c:`def fun(inp=2, out=3):
+    return inp * out
+
+
+print(fun(out=2))`,o:['6','4','el fragmento de código es erróneo y provocará un SyntaxError','2'],a:[1],e:'out se sustituye por 2 e inp conserva su valor predeterminado 2. La función devuelve 2 × 2 = 4.'},
+{q:'¿Cuántos (#) imprimirá el siguiente fragmento de código en la consola?',c:`lst = [[x for x in range(3)] for y in range(3)]
+
+for r in range(3):
+    for c in range(3):
+        if lst[r][c] % 2 != 0:
+            print("#")`,o:['tres','nueve','seis','cero'],a:[0],e:'La lista contiene tres filas [0, 1, 2]. Solo 1 es impar, así que se imprime un # por fila: tres en total.'},
+{q:'¿Cuál es el comportamiento esperado del siguiente programa si el usuario ingresa 0?',c:`try:
+    value = input("Ingresa un valor: ")
+    print(int(value)/len(value))
+except ValueError:
+    print("Entrada incorrecta...")
+except ZeroDivisionError:
+    print("Entrada erronea...")
+except TypeError:
+    print("Entrada muy erronea...")
+except:
+    print("¡Buuu!")`,o:['¡Buuu!','1.0','0.0','Entrada muy errónea...','Entrada errónea...'],a:[2],e:'value es la cadena "0", cuya longitud es 1. int(value) es 0; 0 / 1 da 0.0 y no se produce ninguna excepción.'},
+{q:'¿Cuál es el comportamiento esperado del siguiente programa?',c:`try:
+    print(5/0)
+    break
+except:
+    print("Lo siento, algo salió mal...")
+except (ValueError, ZeroDivisionError):
+    print("Mala suerte...")`,o:['El programa provocará una excepción SyntaxError.','El programa provocará una excepción ValueError y dará como salida un mensaje de error predeterminado.','El programa generará una excepción y será manejada por el primer bloque except.','El programa provocará una excepción ZeroDivisionError y dará como salida el siguiente mensaje: Mala suerte...','El programa provocará una excepción ValueError y dará como salida el siguiente mensaje: Mala suerte...'],a:[0],e:'El código no puede compilarse: break está fuera de un bucle y el except sin tipo debe ser el último manejador. Es un SyntaxError antes de ejecutar 5/0.'},
+{q:'¿Cuál es el comportamiento esperado del siguiente programa?',c:`foo = (1, 2, 3)
+foo.index(0)`,o:['El programa provocará una excepción AttributeError.','El programa provocará una excepción ValueError.','El programa provocará una excepción TypeError.','El programa provocará una excepción SyntaxError.','El programa dará como salida un 1 en la pantalla.'],a:[1],e:'Las tuplas sí tienen index(). Como el valor 0 no aparece en (1, 2, 3), index(0) provoca ValueError.'},
+{q:'¿Cuál de los siguientes fragmentos muestra la forma correcta de manejar múltiples excepciones en una sola cláusula except?',c:`# A:
+except (TypeError, ValueError, ZeroDivisionError):
+    # Algo de código.
+
+# B:
+except TypeError, ValueError, ZeroDivisionError:
+    # Algo de código.
+
+# C:
+except: (TypeError, ValueError, ZeroDivisionError)
+    # Algo de código.
+
+# D:
+except: TypeError, ValueError, ZeroDivisionError
+    # Algo de código.
+
+# E:
+except (TypeError, ValueError, ZeroDivisionError)
+    # Algo de código.
+
+# F:
+except TypeError, ValueError, ZeroDivisionError
+    # Algo de código.`,o:['A solamente','A y B','B y C','D y E','F solamente','A, C, y D'],a:[0],e:'Para capturar varios tipos de excepción en un único manejador de Python 3 se escribe except (Tipo1, Tipo2, Tipo3):. Solo A coloca correctamente los paréntesis y los dos puntos para ese propósito.'},
+{q:'¿Qué pasará cuando intentes ejecutar el siguiente código?',c:'print(¡Hola, Mundo!)',o:['El código generará la excepción TypeError.','El código generará la excepción AttributeError.','El código generará la excepción SyntaxError.','El código imprimirá ¡Hola, Mundo! en la consola.','El código generará la excepción ValueError.'],a:[2],e:'¡Hola, Mundo! no está entre comillas y no es una expresión válida de Python. El código provoca SyntaxError antes de ejecutarse.'}
+];
+let current=0; const answers=[];
+function draw(){
+ const q=questions[current]; el('count').textContent=`${current+1} / ${questions.length}`;el('title').textContent=`Pregunta ${current+1}`;
+ el('question').textContent=q.q;el('question').hidden=!q.q;el('code').hidden=!q.c;el('code').firstElementChild.textContent=q.c||'';
+ el('options').replaceChildren(); q.o.forEach((option,i)=>{const label=document.createElement('label');label.className='form-check';const input=document.createElement('input');input.type=q.a.length>1?'checkbox':'radio';input.name='answer';input.value=i;input.className='form-check-input';const span=document.createElement('span');span.className='form-check-label';span.textContent=option;label.append(input,span);el('options').append(label);});
+ el('feedback').textContent='';el('check').hidden=false;el('check').disabled=false;el('next').hidden=true;
+}
+el('form').addEventListener('submit',event=>{event.preventDefault();const q=questions[current];const selected=Array.from(el('options').querySelectorAll('input:checked')).map(input=>Number(input.value));if(selected.length!==q.a.length){el('feedback').textContent=q.a.length>1?'Selecciona dos respuestas.':'Selecciona una respuesta.';return;}
+ const correct=selected.every(i=>q.a.includes(i));answers[current]=correct;
+ el('feedback').textContent=(correct?'Correcto. ':'Incorrecto. ')+`Respuesta${q.a.length>1?'s correctas':' correcta'}: ${q.a.map(i=>q.o[i]).join(' • ')}. `+q.e;
+ el('options').querySelectorAll('input').forEach(input=>input.disabled=true);el('check').hidden=true;el('next').hidden=false;el('next').textContent=current===34?'Ver resultado':'Siguiente pregunta';
+});
+el('next').addEventListener('click',()=>{if(current<34){current++;draw();}else{el('count').textContent='35 / 35';el('title').textContent='Resultado';el('question').hidden=false;el('question').textContent=`${answers.filter(Boolean).length} respuestas correctas de 35.`;el('code').hidden=true;el('form').hidden=true;el('feedback').textContent='';const restart=document.createElement('button');restart.type='button';restart.className='btn btn-primary';restart.textContent='Reintentar';restart.addEventListener('click',()=>{current=0;answers.length=0;el('form').hidden=false;restart.remove();draw();});root.append(restart);}});
+draw();
+})();
+</script>
+
+</main>
+</body>
+</html>
